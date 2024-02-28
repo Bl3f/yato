@@ -10,7 +10,7 @@ yato is the smallest orchestrator on Earth to orchestrate SQL data transformatio
 yato works with Python 3.8+.
 
 ```bash
-pip install yato-orchestrator
+pip install yato-lib
 ```
 
 ## Get Started
