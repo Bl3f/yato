@@ -74,6 +74,35 @@ yato.backup()
 yato.run()
 ```
 
+## Advanced usage
+
+### Mixing SQL and Python transformation
+Even if we would love to do everything is SQL it happens sometimes that writing a transformation in Python with pandas (or other libraries) might be faster.
+
+This is why you can mix SQL and Python transformation in yato.
+
+In order to do it you can add a Python file in the transformation folder. In this Python file you have to implement a `Transformation` class with a `run` method. If you depend on other SQL transformation you have to define the source SQL query in a static method called `source_sql`.
+
+Below an example of a transformation (like `orders.py`). The framework will understand that orders needs to run after source_orders.
+```python
+from yato import Transformation
+
+
+class Orders(Transformation):
+    @staticmethod
+    def source_sql():
+        return "SELECT * FROM source_orders"
+
+    def run(self, context, *args, **kwargs):
+        df = self.get_source(context)
+
+        df["new_column"] = 1
+
+        return df
+```
+
+
+
 ## How does it work?
 
 yato runs relies on the amazing SQLGlot library to syntactically parse the SQL queries and build a DAG of the dependencies. Then, it runs the queries in the right order.

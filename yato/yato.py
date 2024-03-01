@@ -5,11 +5,16 @@ from graphlib import TopologicalSorter
 
 import duckdb
 
-from yato.parser import get_dependencies, read_sql
+from yato.parser import get_dependencies, read_and_get_python_instance, read_sql
 from yato.storage import Storage
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
+
+class RunContext:
+    def __init__(self, con):
+        self.con = con
 
 
 class Yato:
@@ -101,19 +106,41 @@ class Yato:
         con.sql(f"CREATE SCHEMA IF NOT EXISTS {self.schema}")
         con.sql(f"USE {self.schema}")
 
-    def run_queries(self, execution_order, con):
-        for query_name in execution_order:
-            filename = os.path.join(self.sql_folder, f"{query_name}.sql")
-            if os.path.exists(filename):
-                print(f"Running {query_name}...")
-                self.run_query(filename, query_name, con)
+    def run_objects(self, execution_order, con):
+        for object_name in execution_order:
+            filename = os.path.join(self.sql_folder, f"{object_name}")
+            if os.path.exists(f"{filename}.sql"):
+                print(f"Running SQL {object_name}...")
+                self.run_sql_query(f"{filename}.sql", object_name, con)
+                print(f"OK.")
+            elif os.path.exists(f"{filename}.py"):
+                print(f"Running Python {object_name}...")
+                self.run_python_query(f"{filename}.py", object_name, con)
                 print(f"OK.")
             else:
-                print(f"Identified {query_name} as a source.")
+                print(f"Identified {object_name} as a source.")
 
-    def run_query(self, filename, table_name, con):
+    def run_sql_query(self, filename, table_name, con) -> None:
+        """
+        Runs a SQL query and creates a table in the DuckDB database.
+        :param filename: Name of the SQL file to run.
+        :param table_name: Name of the table to create.
+        :param con: DuckDB connection object.
+        """
         sql = read_sql(filename)
         con.sql(f"""CREATE OR REPLACE TABLE {self.schema}.{table_name} AS {sql}""")
+
+    def run_python_query(self, filename, table_name, con) -> None:
+        """
+        Runs a Python file and creates a table in the DuckDB database.
+        :param filename: Name of the Python file to run.
+        :param table_name: Name of the table to create.
+        :param con: DuckDB connection object.
+        """
+        instance = read_and_get_python_instance(filename)
+        context = RunContext(con)
+        df = instance.run(context)
+        con.sql(f"""CREATE OR REPLACE TABLE {self.schema}.{table_name} AS SELECT * FROM df""")
 
     def run(self) -> object:
         """
@@ -126,6 +153,6 @@ class Yato:
         dependencies = get_dependencies(self.sql_folder, self.dialect)
         execution_order = self.get_execution_order(dependencies)
         self.run_pre_queries(con)
-        self.run_queries(execution_order, con)
+        self.run_objects(execution_order, con)
 
         return con

@@ -1,6 +1,9 @@
+import importlib
 import os
 
 from sqlglot import exp, parse_one
+
+from yato.python_context import load_class_from_file_path
 
 
 def get_table_name(table) -> str:
@@ -10,7 +13,7 @@ def get_table_name(table) -> str:
     :return: The name of the table as a string.
     """
     if isinstance(table.this, exp.Anonymous):
-        if table.this.this == 'read_parquet':
+        if table.this.this == "read_parquet":
             return table.this.expressions[0].this
 
     db = table.text("db")
@@ -25,15 +28,37 @@ def get_table_name(table) -> str:
     return output + table.name
 
 
+def read_and_get_python_instance(filename):
+    """
+    Read the Python file and return the instance of the class with the same name as the file.
+    :param filename: The name of the file to read.
+    :return: The instance of the class with the same name as the file.
+    """
+    name, ext = os.path.splitext(filename)
+    if ext == ".py":
+        class_name = os.path.basename(name).capitalize()
+        klass = load_class_from_file_path(filename, class_name)
+        instance = klass()
+        return instance
+
+
 def read_sql(filename) -> str:
     """
     Read the SQL from the given file.
+    If the file is a Python file it will read the SQL query using the yato helpers.
     :param filename: The name of the file to read.
     :return: The content of the file as a string.
     """
-    with open(filename, "r") as f:
-        sql = f.read()
-    return sql
+
+    name, ext = os.path.splitext(filename)
+    if ext == ".py":
+        instance = read_and_get_python_instance(filename)
+        return instance.source_sql()
+
+    if ext == ".sql":
+        with open(filename, "r") as f:
+            sql = f.read()
+        return sql
 
 
 def get_tables(sql, dialect="duckdb") -> list[str]:
@@ -50,19 +75,20 @@ def get_tables(sql, dialect="duckdb") -> list[str]:
     return list(set([t for t in all_tables if t not in ctes]))
 
 
-def get_dependencies(sql_folder, dialect="duckdb") -> dict:
+def get_dependencies(folder, dialect="duckdb") -> dict:
     """
-    Get the dependencies of the SQL files in the given folder.
+    Get the dependencies of the files (SQL or Python) in the given folder.
 
-    :param sql_folder: The folder in which the SQL files are located.
-    :param dialect: The dialect to use for parsing the SQL files.
-    :return: The data returned is a dictionary with the SQL file names as keys and the tables used in the
-             SQL files as values.
+    :param folder: The folder in which the files (SQL or Python) are located.
+    :param dialect: The dialect to use for parsing the SQL queries.
+    :return: The data returned is a dictionary with the filenames as keys and the tables used in the
+             SQL queries as values.
     """
     dependencies = {}
-    for file in os.listdir(sql_folder):
+    for file in os.listdir(folder):
         name, ext = os.path.splitext(file)
-        filename = os.path.join(sql_folder, file)
-        sql = read_sql(filename)
-        dependencies[name] = get_tables(sql, dialect)
+        if ext == ".sql" or ext == ".py":
+            filename = os.path.join(folder, file)
+            sql = read_sql(filename)
+            dependencies[name] = get_tables(sql, dialect)
     return dependencies
