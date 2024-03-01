@@ -71,9 +71,10 @@ class Yato:
             )
         return None
 
-    def restore(self) -> None:
+    def restore(self, overwrite=False) -> None:
         """
         Restores the DuckDB database from the S3 bucket.
+        :param overwrite: If True, it will overwrite the existing database. Default is False.
         """
         logger.info(f"Restoring the DuckDB database from {self.s3_bucket}/{self.db_folder_name}...")
         with tempfile.TemporaryDirectory() as tmp_dirname:
@@ -81,6 +82,11 @@ class Yato:
 
             os.mkdir(local_db_path)
             self.storage.download_folder(self.s3_bucket, self.db_folder_name, tmp_dirname)
+
+            if overwrite and os.path.exists(self.database_path):
+                logger.info(f"Overwrite activated. Removed {self.database_path}.")
+                os.remove(self.database_path)
+
             con = duckdb.connect(self.database_path)
             con.sql(f"IMPORT DATABASE '{local_db_path}'")
         logger.info("Done.")
