@@ -28,6 +28,16 @@ def get_table_name(table) -> str:
     return output + table.name
 
 
+def snake_to_camel(snake_str):
+    """
+    Convert a snake_case string to camelCase.
+    :param snake_str: The snake_case string to convert.
+    :return: The camelCase string.
+    """
+    components = snake_str.split('_')
+    return ''.join(x.title() for x in components)
+
+
 def read_and_get_python_instance(filename):
     """
     Read the Python file and return the instance of the class with the same name as the file.
@@ -36,7 +46,7 @@ def read_and_get_python_instance(filename):
     """
     name, ext = os.path.splitext(filename)
     if ext == ".py":
-        class_name = os.path.basename(name).capitalize()
+        class_name = snake_to_camel(os.path.basename(name))
         klass = load_class_from_file_path(filename, class_name)
         instance = klass()
         return instance
