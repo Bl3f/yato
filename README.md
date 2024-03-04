@@ -101,8 +101,45 @@ class Orders(Transformation):
         return df
 ```
 
+### Environment variables
+yato supports env variables in the SQL queries (like in the example below). Be careful by default it raises an issue if the env variable is not defined.
+
+```sql
+SELECT {{ VALUE }}, {{ OTHER_VALUE }}
+```
+
+### Other features
+* yato supports the subfolders in the main folder, just create the folders you want to organise your transformations, folders have no impact on the DAG inference. Be careful not to have 2 transformations with the same name.
 
 
 ## How does it work?
 
 yato runs relies on the amazing SQLGlot library to syntactically parse the SQL queries and build a DAG of the dependencies. Then, it runs the queries in the right order.
+
+## FAQ
+
+**Why choose yato over dbt Core, SQLMesh or lea?**
+
+There is no good answer to this question but yato has not be designed to fully replace SQL transformation orchestrators. yato is meant to be fast to setup and configure with a few features. You give a folder with a bunch of SQL (or Python) inside and it runs. 
+
+You can imagine yato like black for transformations orchestration. Only one parameter and here you go.
+
+**Why only DuckDB**
+
+For the moment yato only supports DuckDB as backend/dialect. The main reason is that DuckDB offers features that would be hard to implement with a client/server database. I do not exclude to add Postgres or cloud warehouses, but it would require to think how to do it, especially when mixing SQL and Python transformations.
+
+**Can yato support Jinja templating?**
+
+I does not. I'm not sure it should. I think that when you're adding Jinja templating to your SQL queries you're already too far. I would recommend not to use yato for this. Still if you really want to use yato and have Jinja support reach me. 
+
+Small note, yato support env variables in the SQL queries.
+
+**Can I contribute?**
+
+Yes obviously, right now the project is in its early stage and I would be happy to have feedbacks and contributions. Keep in mind this is a small orchestrator and covering the full gap with other ochestrators makes no sense because just use them they are awesome.
+
+
+
+## Limitations
+* You can't have 2 transformations with the same name.
+* There are no tests for the moment. I'm working on it.

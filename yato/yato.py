@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import tempfile
 from graphlib import TopologicalSorter
 
@@ -13,8 +14,33 @@ logging.basicConfig(level=logging.INFO)
 
 
 class RunContext:
-    def __init__(self, con):
+    def __init__(self, con, fail_silently=False):
+        """
+        This class is a wrapper around the DuckDB connection object.
+        :param con: DuckDB connection object.
+        :param fail_silently: If True, it will not raise an error if an environment variable is not set. Default is False.
+        """
         self.con = con
+        self.fail_silently = fail_silently
+
+    def replace_env_vars(self, sql) -> str:
+        """
+        Replace the environment variables in the SQL.
+        :param sql: The SQL to replace the environment variables in.
+        :return: SQL with the environment variables replaced.
+        """
+        pattern = re.compile(r"\{\{\s*(\w+)\s*\}\}")
+
+        def replace_match(match):
+            var_name = match.group(1)
+            if not self.fail_silently and os.getenv(var_name) is None:
+                raise ValueError(f"Environment variable {var_name} is not set.")
+            return os.getenv(var_name)
+
+        return pattern.sub(replace_match, sql)
+
+    def sql(self, sql):
+        self.con.sql(self.replace_env_vars(sql))
 
 
 class Yato:
@@ -108,45 +134,44 @@ class Yato:
         ts = TopologicalSorter({d: dependencies[d].deps for d in dependencies})
         return list(ts.static_order())
 
-    def run_pre_queries(self, con):
-        con.sql(f"CREATE SCHEMA IF NOT EXISTS {self.schema}")
-        con.sql(f"USE {self.schema}")
+    def run_pre_queries(self, context: RunContext) -> None:
+        context.sql(f"CREATE SCHEMA IF NOT EXISTS {self.schema}")
+        context.sql(f"USE {self.schema}")
 
-    def run_objects(self, execution_order, dependencies, con):
+    def run_objects(self, execution_order, dependencies, context: RunContext) -> None:
         for object_name in execution_order:
             filename = dependencies[object_name].filename
             if os.path.exists(filename) and filename.endswith(".sql"):
                 print(f"Running SQL {object_name}...")
-                self.run_sql_query(filename, object_name, con)
+                self.run_sql_query(filename, object_name, context)
                 print(f"OK.")
             elif os.path.exists(filename) and filename.endswith(".py"):
                 print(f"Running Python {object_name}...")
-                self.run_python_query(filename, object_name, con)
+                self.run_python_query(filename, object_name, context)
                 print(f"OK.")
             else:
                 print(f"Identified {object_name} as a source.")
 
-    def run_sql_query(self, filename, table_name, con) -> None:
+    def run_sql_query(self, filename, table_name, context: RunContext) -> None:
         """
         Runs a SQL query and creates a table in the DuckDB database.
         :param filename: Name of the SQL file to run.
         :param table_name: Name of the table to create.
-        :param con: DuckDB connection object.
+        :param context: RunContext object.
         """
         sql = read_sql(filename)
-        con.sql(f"""CREATE OR REPLACE TABLE {self.schema}.{table_name} AS {sql}""")
+        context.sql(f"""CREATE OR REPLACE TABLE {self.schema}.{table_name} AS {sql}""")
 
-    def run_python_query(self, filename, table_name, con) -> None:
+    def run_python_query(self, filename, table_name, context: RunContext) -> None:
         """
         Runs a Python file and creates a table in the DuckDB database.
         :param filename: Name of the Python file to run.
         :param table_name: Name of the table to create.
-        :param con: DuckDB connection object.
+        :param context: RunContext object.
         """
         instance = read_and_get_python_instance(filename)
-        context = RunContext(con)
         df = instance.run(context)
-        con.sql(f"""CREATE OR REPLACE TABLE {self.schema}.{table_name} AS SELECT * FROM df""")
+        context.sql(f"""CREATE OR REPLACE TABLE {self.schema}.{table_name} AS SELECT * FROM df""")
 
     def run(self) -> object:
         """
@@ -156,9 +181,10 @@ class Yato:
         :return: Then it returns a DuckDB connection object.
         """
         con = duckdb.connect(self.database_path)
+        context = RunContext(con)
         dependencies = get_dependencies(self.sql_folder, self.dialect)
         execution_order = self.get_execution_order(dependencies)
-        self.run_pre_queries(con)
-        self.run_objects(execution_order, dependencies, con)
+        self.run_pre_queries(context)
+        self.run_objects(execution_order, dependencies, context)
 
         return con

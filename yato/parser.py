@@ -35,8 +35,8 @@ def snake_to_camel(snake_str):
     :param snake_str: The snake_case string to convert.
     :return: The camelCase string.
     """
-    components = snake_str.split('_')
-    return ''.join(x.title() for x in components)
+    components = snake_str.split("_")
+    return "".join(x.title() for x in components)
 
 
 def read_and_get_python_instance(filename):

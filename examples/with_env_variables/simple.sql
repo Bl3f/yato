@@ -1,0 +1,1 @@
+SELECT {{ VALUE }}, {{ OTHER_VALUE }}
