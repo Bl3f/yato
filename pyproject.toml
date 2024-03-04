@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yato-lib"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Christophe Blefari <yota@blef.fr>"]
 license = "MIT"
 description = "The smallest DuckDB SQL transformations orchestrator"

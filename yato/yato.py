@@ -6,8 +6,7 @@ from graphlib import TopologicalSorter
 
 import duckdb
 
-from yato.parser import get_dependencies, read_and_get_python_instance, read_sql, parse_sql, \
-    find_select_query, exp
+from yato.parser import exp, find_select_query, get_dependencies, parse_sql, read_and_get_python_instance, read_sql
 from yato.storage import Storage
 
 logger = logging.getLogger(__name__)
