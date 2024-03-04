@@ -1,0 +1,2 @@
+SELECT *
+FROM stg_42

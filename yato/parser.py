@@ -1,5 +1,6 @@
 import importlib
 import os
+from dataclasses import dataclass
 
 from sqlglot import exp, parse_one
 
@@ -85,6 +86,12 @@ def get_tables(sql, dialect="duckdb") -> list[str]:
     return list(set([t for t in all_tables if t not in ctes]))
 
 
+@dataclass
+class Dependency:
+    deps: list[str]
+    filename: str
+
+
 def get_dependencies(folder, dialect="duckdb") -> dict:
     """
     Get the dependencies of the files (SQL or Python) in the given folder.
@@ -95,10 +102,11 @@ def get_dependencies(folder, dialect="duckdb") -> dict:
              SQL queries as values.
     """
     dependencies = {}
-    for file in os.listdir(folder):
-        name, ext = os.path.splitext(file)
-        if ext == ".sql" or ext == ".py":
-            filename = os.path.join(folder, file)
-            sql = read_sql(filename)
-            dependencies[name] = get_tables(sql, dialect)
+    for dirpath, dirnames, filenames in os.walk(folder):
+        for file in filenames:
+            name, ext = os.path.splitext(file)
+            if ext == ".sql" or ext == ".py":
+                filename = os.path.join(dirpath, file)
+                sql = read_sql(filename)
+                dependencies[name] = Dependency(deps=get_tables(sql, dialect), filename=filename)
     return dependencies

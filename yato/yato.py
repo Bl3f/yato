@@ -105,23 +105,23 @@ class Yato:
         logger.info("Done.")
 
     def get_execution_order(self, dependencies):
-        ts = TopologicalSorter(dependencies)
+        ts = TopologicalSorter({d: dependencies[d].deps for d in dependencies})
         return list(ts.static_order())
 
     def run_pre_queries(self, con):
         con.sql(f"CREATE SCHEMA IF NOT EXISTS {self.schema}")
         con.sql(f"USE {self.schema}")
 
-    def run_objects(self, execution_order, con):
+    def run_objects(self, execution_order, dependencies, con):
         for object_name in execution_order:
-            filename = os.path.join(self.sql_folder, f"{object_name}")
-            if os.path.exists(f"{filename}.sql"):
+            filename = dependencies[object_name].filename
+            if os.path.exists(filename) and filename.endswith(".sql"):
                 print(f"Running SQL {object_name}...")
-                self.run_sql_query(f"{filename}.sql", object_name, con)
+                self.run_sql_query(filename, object_name, con)
                 print(f"OK.")
-            elif os.path.exists(f"{filename}.py"):
+            elif os.path.exists(filename) and filename.endswith(".py"):
                 print(f"Running Python {object_name}...")
-                self.run_python_query(f"{filename}.py", object_name, con)
+                self.run_python_query(filename, object_name, con)
                 print(f"OK.")
             else:
                 print(f"Identified {object_name} as a source.")
@@ -159,6 +159,6 @@ class Yato:
         dependencies = get_dependencies(self.sql_folder, self.dialect)
         execution_order = self.get_execution_order(dependencies)
         self.run_pre_queries(con)
-        self.run_objects(execution_order, con)
+        self.run_objects(execution_order, dependencies, con)
 
         return con
