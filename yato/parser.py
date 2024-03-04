@@ -2,7 +2,7 @@ import importlib
 import os
 from dataclasses import dataclass
 
-from sqlglot import exp, parse_one
+from sqlglot import exp, parse
 
 from yato.python_context import load_class_from_file_path
 
@@ -72,6 +72,27 @@ def read_sql(filename) -> str:
         return sql
 
 
+def find_select_query(trees: list[exp.Expression]):
+    """
+    Find the select query in the given list of SQLGlot trees.
+    :param trees: SQLGlot trees list.
+    :return:
+    """
+    if sum([isinstance(t, exp.Select) for t in trees]) > 1:
+        raise ValueError("Only one SELECT query is allowed.")
+    return [t for t in trees if isinstance(t, exp.Select)][0]
+
+
+def parse_sql(sql, dialect="duckdb"):
+    """
+    Parse the given SQL using the SQLGlot parser.
+    :param sql: The SQL to parse.
+    :param dialect: The dialect to use for parsing the SQL.
+    :return: The data returned is a list of SQLGlot trees.
+    """
+    return parse(sql, dialect=dialect)
+
+
 def get_tables(sql, dialect="duckdb") -> list[str]:
     """
     Get the tables used in the given SQL.
@@ -80,9 +101,10 @@ def get_tables(sql, dialect="duckdb") -> list[str]:
     :param dialect: The dialect to use for parsing the SQL.
     :return: The data returned is a list of table names used in the SQL.
     """
-    tree = parse_one(sql, dialect=dialect)
-    ctes = [c.alias_or_name for c in tree.find_all(exp.CTE)]
-    all_tables = [get_table_name(t) for t in tree.find_all(exp.Table)]
+    trees = parse_sql(sql, dialect=dialect)
+    select = find_select_query(trees)
+    ctes = [c.alias_or_name for c in select.find_all(exp.CTE)]
+    all_tables = [get_table_name(t) for t in select.find_all(exp.Table)]
     return list(set([t for t in all_tables if t not in ctes]))
 
 

@@ -6,7 +6,8 @@ from graphlib import TopologicalSorter
 
 import duckdb
 
-from yato.parser import get_dependencies, read_and_get_python_instance, read_sql
+from yato.parser import get_dependencies, read_and_get_python_instance, read_sql, parse_sql, \
+    find_select_query, exp
 from yato.storage import Storage
 
 logger = logging.getLogger(__name__)
@@ -140,6 +141,11 @@ class Yato:
 
     def run_objects(self, execution_order, dependencies, context: RunContext) -> None:
         for object_name in execution_order:
+
+            if object_name not in dependencies:
+                print(f"Identified {object_name} as a source.")
+                continue
+
             filename = dependencies[object_name].filename
             if os.path.exists(filename) and filename.endswith(".sql"):
                 print(f"Running SQL {object_name}...")
@@ -160,7 +166,15 @@ class Yato:
         :param context: RunContext object.
         """
         sql = read_sql(filename)
-        context.sql(f"""CREATE OR REPLACE TABLE {self.schema}.{table_name} AS {sql}""")
+        trees = parse_sql(sql, dialect=self.dialect)
+        if len(trees) > 1:
+            for tree in trees:
+                if isinstance(tree, exp.Select):
+                    context.sql(f"""CREATE OR REPLACE TABLE {self.schema}.{table_name} AS {tree}""")
+                else:
+                    context.sql(f"{tree}")
+        else:
+            context.sql(f"""CREATE OR REPLACE TABLE {self.schema}.{table_name} AS {sql}""")
 
     def run_python_query(self, filename, table_name, context: RunContext) -> None:
         """

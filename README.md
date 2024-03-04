@@ -109,7 +109,8 @@ SELECT {{ VALUE }}, {{ OTHER_VALUE }}
 ```
 
 ### Other features
-* yato supports the subfolders in the main folder, just create the folders you want to organise your transformations, folders have no impact on the DAG inference. Be careful not to have 2 transformations with the same name.
+* **Subfolders** — in the main folder, just create the folders you want to organise your transformations, folders have no impact on the DAG inference. Be careful not to have 2 transformations with the same name.
+* **Multiple SQL statements** — in the same file, yato will run them in the order they appear. Warning: you can only have one SELECT statement. Other statements can be SET, etc. Still the dependencies (hence the DAG) are computed on the SELECT only for the moment.
 
 
 ## How does it work?
