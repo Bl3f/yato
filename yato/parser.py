@@ -1,4 +1,4 @@
-import importlib
+import logging
 import os
 from dataclasses import dataclass
 
@@ -72,15 +72,35 @@ def read_sql(filename) -> str:
         return sql
 
 
+def is_select_tree(tree):
+    """
+    Check if the given SQLGlot tree is a SELECT query.
+    :param tree: The SQLGlot tree to check.
+    :return: True if the tree is a SELECT query, False otherwise.
+    """
+    return isinstance(tree, exp.Select) or isinstance(tree, exp.CTE) or isinstance(tree, exp.Pivot)
+
+
+def is_insert_tree(tree):
+    """
+    Check if the given SQLGlot tree is an INSERT query.
+    :param tree: The SQLGlot tree to check.
+    :return: True if the tree is an INSERT query, False otherwise.
+    """
+    return isinstance(tree, exp.Insert)
+
+
 def find_select_query(trees: list[exp.Expression]):
     """
     Find the select query in the given list of SQLGlot trees.
     :param trees: SQLGlot trees list.
     :return:
     """
-    if sum([isinstance(t, exp.Select) for t in trees]) > 1:
+    if sum([is_select_tree(t) for t in trees]) > 1:
         raise ValueError("Only one SELECT query is allowed.")
-    return [t for t in trees if isinstance(t, exp.Select)][0]
+    if sum([is_insert_tree(t) for t in trees]) == 1:
+        return [t for t in trees if is_insert_tree(t)][0]
+    return [t for t in trees if is_select_tree(t)][0]
 
 
 def parse_sql(sql, dialect="duckdb"):

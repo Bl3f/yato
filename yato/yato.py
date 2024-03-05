@@ -5,12 +5,13 @@ import tempfile
 from graphlib import TopologicalSorter
 
 import duckdb
+from rich.console import Console
 
-from yato.parser import exp, find_select_query, get_dependencies, parse_sql, read_and_get_python_instance, read_sql
+from yato.parser import get_dependencies, is_select_tree, parse_sql, read_and_get_python_instance, read_sql
 from yato.storage import Storage
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.CRITICAL)
 
 
 class RunContext:
@@ -22,6 +23,7 @@ class RunContext:
         """
         self.con = con
         self.fail_silently = fail_silently
+        self.console = Console()
 
     def replace_env_vars(self, sql) -> str:
         """
@@ -139,23 +141,24 @@ class Yato:
         context.sql(f"USE {self.schema}")
 
     def run_objects(self, execution_order, dependencies, context: RunContext) -> None:
-        for object_name in execution_order:
+        context.console.print(f"Running {len(execution_order)} objects...")
+        with context.console.status("[bold green]Running...", speed=.6) as status:
+            for object_name in execution_order:
+                if object_name not in dependencies:
+                    context.console.print(f"[green]•[/] Identified {object_name} as a source.")
+                    continue
 
-            if object_name not in dependencies:
-                print(f"Identified {object_name} as a source.")
-                continue
-
-            filename = dependencies[object_name].filename
-            if os.path.exists(filename) and filename.endswith(".sql"):
-                print(f"Running SQL {object_name}...")
-                self.run_sql_query(filename, object_name, context)
-                print(f"OK.")
-            elif os.path.exists(filename) and filename.endswith(".py"):
-                print(f"Running Python {object_name}...")
-                self.run_python_query(filename, object_name, context)
-                print(f"OK.")
-            else:
-                print(f"Identified {object_name} as a source.")
+                filename = dependencies[object_name].filename
+                if os.path.exists(filename) and filename.endswith(".sql"):
+                    status.update(f"[bold green]Running SQL {object_name}...")
+                    self.run_sql_query(filename, object_name, context)
+                    context.console.print(f"[green]•[/] {object_name} completed.")
+                elif os.path.exists(filename) and filename.endswith(".py"):
+                    status.update(f"[bold green]Running Python {object_name}...")
+                    self.run_python_query(filename, object_name, context)
+                    context.console.print(f"[green]•[/] {object_name} completed.")
+                else:
+                    context.console.print(f"Identified {object_name} as a source.")
 
     def run_sql_query(self, filename, table_name, context: RunContext) -> None:
         """
@@ -168,7 +171,7 @@ class Yato:
         trees = parse_sql(sql, dialect=self.dialect)
         if len(trees) > 1:
             for tree in trees:
-                if isinstance(tree, exp.Select):
+                if is_select_tree(tree):
                     context.sql(f"""CREATE OR REPLACE TABLE {self.schema}.{table_name} AS {tree}""")
                 else:
                     context.sql(f"{tree}")
