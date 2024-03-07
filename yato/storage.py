@@ -4,7 +4,7 @@ import boto3
 
 
 class Storage:
-    def __init__(self, s3_access_key, s3_secret_key, s3_endpoint_url) -> None:
+    def __init__(self, s3_access_key, s3_secret_key, s3_endpoint_url, s3_region_name) -> None:
         """
         This class is a wrapper around boto3 S3 client.
 
@@ -15,12 +15,14 @@ class Storage:
         self.s3_access_key = s3_access_key
         self.s3_secret_key = s3_secret_key
         self.s3_endpoint_url = s3_endpoint_url
+        self.s3_region_name = s3_region_name
 
         self.client = boto3.client(
             "s3",
             aws_access_key_id=self.s3_access_key,
             aws_secret_access_key=self.s3_secret_key,
             endpoint_url=self.s3_endpoint_url,
+            region_name=self.s3_region_name,
         )
 
     def download_folder(self, bucket, source_folder, destination_folder) -> None:

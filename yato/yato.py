@@ -57,6 +57,7 @@ class Yato:
         s3_access_key: str = None,
         s3_secret_key: str = None,
         s3_endpoint_url: str = None,
+        s3_region_name: str = None,
     ) -> None:
         """
         yato stands for yet another transformation orchestrator.
@@ -74,6 +75,7 @@ class Yato:
         :param s3_access_key: The S3 access key.
         :param s3_secret_key: The S3 secret key.
         :param s3_endpoint_url: The S3 endpoint URL.
+        :param s3_region_name: The region name.
         """
         self.database_path = database_path
         self.sql_folder = sql_folder
@@ -84,6 +86,7 @@ class Yato:
         self.s3_access_key = s3_access_key
         self.s3_secret_key = s3_secret_key
         self.s3_endpoint_url = s3_endpoint_url
+        self.s3_region_name = s3_region_name
 
     @property
     def storage(self) -> object or None:
@@ -96,6 +99,7 @@ class Yato:
                 s3_access_key=self.s3_access_key,
                 s3_secret_key=self.s3_secret_key,
                 s3_endpoint_url=self.s3_endpoint_url,
+                s3_region_name=self.s3_region_name,
             )
         return None
 
