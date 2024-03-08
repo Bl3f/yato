@@ -146,7 +146,7 @@ class Yato:
 
     def run_objects(self, execution_order, dependencies, context: RunContext) -> None:
         context.console.print(f"Running {len(execution_order)} objects...")
-        with context.console.status("[bold green]Running...", speed=.6) as status:
+        with context.console.status("[bold green]Running...", speed=0.6) as status:
             for object_name in execution_order:
                 if object_name not in dependencies:
                     context.console.print(f"[green]•[/] Identified {object_name} as a source.")

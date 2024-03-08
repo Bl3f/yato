@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yato-lib"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Christophe Blefari <yato@blef.fr>"]
 license = "MIT"
 description = "The smallest DuckDB SQL transformations orchestrator"
@@ -34,6 +34,7 @@ rich = "^13.7.1"
 [tool.poetry.group.dev.dependencies]
 black = "^24.2.0"
 isort = "^5.13.2"
+pytest = "^8.0.2"
 
 [tool.poetry.extras]
 pandas = ["pandas"]

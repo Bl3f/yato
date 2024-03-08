@@ -13,6 +13,7 @@ def get_table_name(table) -> str:
     :param table: The SQLGlot Table object.
     :return: The name of the table as a string.
     """
+    # import pdb; pdb.set_trace()
     if isinstance(table.this, exp.Anonymous):
         if table.this.this == "read_parquet":
             return table.this.expressions[0].this
