@@ -1,5 +1,3 @@
-import unittest
-
 import pytest
 from sqlglot import exp
 
