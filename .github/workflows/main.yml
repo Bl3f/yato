@@ -18,5 +18,9 @@ jobs:
         virtualenvs-create: false
     - name: Install dependencies
       run: poetry install
+    - name: Run black checking mode
+      run: black . --check
+    - name: Run isort checking mode
+      run: isort . -c -v
     - name: Run tests
       run: pytest
