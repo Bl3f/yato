@@ -1,16 +1,16 @@
-import unittest
-
 import pytest
 from sqlglot import exp
 
 from yato.parser import (
+    Dependency,
     find_select_query,
+    get_dependencies,
     get_table_name,
     get_tables,
     parse_sql,
     read_and_get_python_instance,
     read_sql,
-    snake_to_camel, get_dependencies, Dependency,
+    snake_to_camel,
 )
 
 
@@ -107,6 +107,6 @@ def test_get_tables():
 def test_get_dependencies():
     deps = get_dependencies("tests/files/case0")
     assert len(deps) == 2
-    assert frozenset(deps.keys())  == frozenset(["table0", "table1"])
+    assert frozenset(deps.keys()) == frozenset(["table0", "table1"])
     assert deps["table0"] == Dependency(deps=["source_orders"], filename="tests/files/case0/table0.sql")
     assert deps["table1"] == Dependency(deps=["table0"], filename="tests/files/case0/table1.sql")
