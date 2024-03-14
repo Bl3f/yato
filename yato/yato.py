@@ -15,13 +15,17 @@ logging.basicConfig(level=logging.CRITICAL)
 
 
 class RunContext:
-    def __init__(self, con, fail_silently=False):
+    def __init__(self, database_path, dialect, fail_silently=False):
         """
         This class is a wrapper around the DuckDB connection object.
-        :param con: DuckDB connection object.
+        :param database_path: The path to the database file.
+        :param dialect: The SQL dialect to use as backend database.
         :param fail_silently: If True, it will not raise an error if an environment variable is not set. Default is False.
         """
-        self.con = con
+        if dialect == "duckdb":
+            self.con = duckdb.connect(database_path)
+        else:
+            raise ValueError(f"The SQL dialect {dialect} is not supported.")
         self.fail_silently = fail_silently
         self.console = Console()
 
@@ -198,13 +202,12 @@ class Yato:
         Runs do all the magic, it parses all the SQL queries, resolves the dependencies,
         and runs the queries in the guessed order.
 
-        :return: Then it returns a DuckDB connection object.
+        :return: Then it returns an engine connection object.
         """
-        con = duckdb.connect(self.database_path)
-        context = RunContext(con)
+        context = RunContext(self.database_path, self.dialect)
         dependencies = get_dependencies(self.sql_folder, self.dialect)
         execution_order = self.get_execution_order(dependencies)
         self.run_pre_queries(context)
         self.run_objects(execution_order, dependencies, context)
 
-        return con
+        return context.con
