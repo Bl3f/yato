@@ -22,8 +22,13 @@ class RunContext:
         :param dialect: The SQL dialect to use as backend database.
         :param fail_silently: If True, it will not raise an error if an environment variable is not set. Default is False.
         """
+        self.dialect = dialect
+
         if dialect == "duckdb":
             self.con = duckdb.connect(database_path)
+        elif dialect == "chdb":
+            import chdb.dbapi as dbapi
+            self.con = dbapi.connect()
         else:
             raise ValueError(f"The SQL dialect {dialect} is not supported.")
         self.fail_silently = fail_silently
@@ -46,7 +51,12 @@ class RunContext:
         return pattern.sub(replace_match, sql)
 
     def sql(self, sql):
-        self.con.sql(self.replace_env_vars(sql))
+        if self.dialect == "duckdb":
+            self.con.sql(self.replace_env_vars(sql))
+        elif self.dialect == "chdb":
+            cursor = self.con.cursor()
+            cursor.execute(self.replace_env_vars(sql))
+
 
 
 class Yato:
@@ -145,8 +155,9 @@ class Yato:
         return list(ts.static_order())
 
     def run_pre_queries(self, context: RunContext) -> None:
-        context.sql(f"CREATE SCHEMA IF NOT EXISTS {self.schema}")
-        context.sql(f"USE {self.schema}")
+        if self.dialect == "duckdb":
+            context.sql(f"CREATE SCHEMA IF NOT EXISTS {self.schema}")
+            context.sql(f"USE {self.schema}")
 
     def run_objects(self, execution_order, dependencies, context: RunContext) -> None:
         context.console.print(f"Running {len(execution_order)} objects...")

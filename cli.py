@@ -12,7 +12,8 @@ def cli():
 @click.argument("sql")
 @click.option("--db", help="Path to the DuckDB database.", default="yato.duckdb", show_default=True)
 @click.option("--schema", help="Path to the DuckDB database.", default="transform")
-def run(sql, db, schema):
+@click.option("--dialect", help="The SQL dialect to use as backend database.", default="duckdb", show_default=True)
+def run(sql, db, schema, dialect):
     """
     Run yato against a DuckDB database using the SQL files.
 
@@ -22,6 +23,7 @@ def run(sql, db, schema):
         database_path=db,
         sql_folder=sql,
         schema=schema,
+        dialect=dialect,
     )
 
     yato.run()

@@ -30,6 +30,7 @@ duckdb = "^0.9.2"
 click = "^8.1.7"
 pandas = {version = "2.0.3", optional = true}
 rich = "^13.7.1"
+chdb = {version = "^1.2.1", extras = ["chdb"]}
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.2.0"

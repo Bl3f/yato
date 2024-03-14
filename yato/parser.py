@@ -110,6 +110,8 @@ def parse_sql(sql, dialect="duckdb"):
     :param dialect: The dialect to use for parsing the SQL.
     :return: The data returned is a list of SQLGlot trees.
     """
+    if dialect == "chdb":
+        dialect = "clickhouse"
     return parse(sql, dialect=dialect)
 
 
