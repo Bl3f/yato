@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yato-lib"
-version = "0.0.9"
+version = "0.0.10"
 authors = ["Christophe Blefari <yato@blef.fr>"]
 license = "MIT"
 description = "The smallest DuckDB SQL transformations orchestrator"
@@ -20,7 +20,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-yato = 'cli:cli'
+yato = 'yato.cli:cli'
 
 [tool.poetry.dependencies]
 python = ">=3.8.1,<3.13"
