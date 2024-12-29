@@ -131,7 +131,7 @@ For the moment yato only supports DuckDB as backend/dialect. The main reason is 
 
 **Can yato support Jinja templating?**
 
-I does not. I'm not sure it should. I think that when you're adding Jinja templating to your SQL queries you're already too far. I would recommend not to use yato for this. Still if you really want to use yato and have Jinja support reach me. 
+It does not. I'm not sure it should. I think that when you're adding Jinja templating to your SQL queries you're already too far. I would recommend not to use yato for this. Still if you really want to use yato and have Jinja support reach me. 
 
 Small note, yato support env variables in the SQL queries.
 
