@@ -9,14 +9,17 @@ from yato.python_context import load_class_from_file_path
 def get_table_name(table) -> str:
     """
     Get the name of a SQLGlot Table object with the database and catalog if available.
+    Also handles DuckDB table functions like read_csv and read_parquet.
     :param table: The SQLGlot Table object.
     :return: The name of the table as a string.
     """
-    # import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     if isinstance(table.this, exp.Anonymous):
         if table.this.this == "read_parquet":
             return table.this.expressions[0].this
-
+    if isinstance(table.this, exp.ReadCSV):
+        return table.this.this.this
+    
     db = table.text("db")
     catalog = table.text("catalog")
     output = ""

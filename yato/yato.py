@@ -7,6 +7,7 @@ from graphlib import TopologicalSorter
 import duckdb
 from rich.console import Console
 
+from yato.mermaid import generate_mermaid_diagram
 from yato.parser import get_dependencies, is_select_tree, parse_sql, read_and_get_python_instance, read_sql
 from yato.storage import Storage
 
@@ -155,8 +156,11 @@ class Yato:
                 filename = dependencies[object_name].filename
                 if os.path.exists(filename) and filename.endswith(".sql"):
                     status.update(f"[bold green]Running SQL {object_name}...")
-                    self.run_sql_query(filename, object_name, context)
-                    context.console.print(f"[green]•[/] {object_name} completed.")
+                    try:
+                        self.run_sql_query(filename, object_name, context)
+                        context.console.print(f"[green]•[/] {object_name} completed.")
+                    except Exception as e:
+                        context.console.print(f"[red]Error running {object_name}: {e}[/]")
                 elif os.path.exists(filename) and filename.endswith(".py"):
                     status.update(f"[bold green]Running Python {object_name}...")
                     self.run_python_query(filename, object_name, context)
@@ -190,7 +194,7 @@ class Yato:
         :param context: RunContext object.
         """
         instance = read_and_get_python_instance(filename)
-        df = instance.run(context)
+        context.con.register("df", instance.run(context))
         context.sql(f"""CREATE OR REPLACE TABLE {self.schema}.{table_name} AS SELECT * FROM df""")
 
     def run(self) -> object:
@@ -206,5 +210,5 @@ class Yato:
         execution_order = self.get_execution_order(dependencies)
         self.run_pre_queries(context)
         self.run_objects(execution_order, dependencies, context)
-
+        generate_mermaid_diagram(self.sql_folder, dependencies)
         return con
