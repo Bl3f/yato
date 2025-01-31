@@ -11,7 +11,7 @@ def cli():
 @cli.command()
 @click.argument("sql")
 @click.option("--db", help="Path to the DuckDB database.", default="yato.duckdb", show_default=True)
-@click.option("--schema", help="Path to the DuckDB database.", default="transform")
+@click.option("--schema", help="The schema to use in the DuckDB database.", default="transform")
 def run(sql, db, schema):
     """
     Run yato against a DuckDB database using the SQL files.
