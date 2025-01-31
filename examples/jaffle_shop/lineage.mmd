@@ -1,0 +1,42 @@
+flowchart LR
+  stg_products(stg_products)
+  raw_products --> stg_products
+  stg_customers(stg_customers)
+  raw_customers --> stg_customers
+  stg_supplies(stg_supplies)
+  raw_supplies --> stg_supplies
+  stg_orders(stg_orders)
+  raw_orders --> stg_orders
+  stg_order_items(stg_order_items)
+  raw_items --> stg_order_items
+  stg_locations(stg_locations)
+  raw_stores --> stg_locations
+  supplies(supplies)
+  stg_supplies --> supplies
+  products(products)
+  stg_products --> products
+  customers(customers)
+  stg_orders --> customers
+  stg_customers --> customers
+  orders(orders)
+  stg_orders --> orders
+  order_items --> orders
+  order_items(order_items)
+  stg_products --> order_items
+  stg_order_items --> order_items
+  stg_orders --> order_items
+  stg_supplies --> order_items
+  locations(locations)
+  stg_locations --> locations
+  raw_stores(raw_stores)
+  examples/jaffle_shop/sources/raw_stores.csv --> raw_stores
+  raw_customers(raw_customers)
+  examples/jaffle_shop/sources/raw_customers.csv --> raw_customers
+  raw_items(raw_items)
+  examples/jaffle_shop/sources/raw_items.csv --> raw_items
+  raw_products(raw_products)
+  examples/jaffle_shop/sources/raw_products.csv --> raw_products
+  raw_orders(raw_orders)
+  examples/jaffle_shop/sources/raw_orders.csv --> raw_orders
+  raw_supplies(raw_supplies)
+  examples/jaffle_shop/sources/raw_supplies.csv --> raw_supplies
