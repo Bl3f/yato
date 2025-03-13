@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from sqlglot import exp
 
@@ -38,9 +40,30 @@ def test_snake_to_camel():
     assert snake_to_camel("snake") == "Snake"
 
 
-def test_read_and_get_python_instance_with_python_file():
+def test_read_and_get_one_python_instance_with_python_file(tmp_path):
     instance = read_and_get_python_instance("tests/files/module.py")
     assert type(instance).__name__ == "Module"
+    # Also test that the class name does not need to match the file name.
+    temp_file = tmp_path / "mock_module.py"
+    temp_file.write_bytes(b"\n\nclass MockClass:\n    pass\n")
+    instance = read_and_get_python_instance(temp_file)
+    assert type(instance).__name__ == "MockClass"
+
+
+def test_read_and_get_multi_python_instance_with_python_file(tmp_path):
+    """Test that the function raises an error when multiple classes are defined in the Python file."""
+    temp_file = tmp_path / "mock_module.py"
+    temp_file.write_bytes(Path("tests/files/module.py").read_bytes() + b"\n\nclass MockClass:\n    pass\n")
+    with pytest.raises(ValueError, match="Only one Transformation class is allowed."):
+        read_and_get_python_instance(temp_file)
+
+
+def test_read_and_get_none_python_instance_with_python_file(tmp_path):
+    """Test that the function raises an error when no classes are defined in the Python file."""
+    temp_file = tmp_path / "mock_module.py"
+    temp_file.write_bytes(b"print('Hello, World!')")
+    with pytest.raises(ValueError, match="No Transformation class found in the Python file:"):
+        read_and_get_python_instance(temp_file)
 
 
 def test_read_and_get_python_instance_with_sql_file():

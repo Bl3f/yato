@@ -1,3 +1,4 @@
+import ast
 import os
 from dataclasses import dataclass
 
@@ -44,16 +45,23 @@ def snake_to_camel(snake_str):
 
 def read_and_get_python_instance(filename):
     """
-    Read the Python file and return the instance of the class with the same name as the file.
+    Read the Python file and return the instance of the class.
     :param filename: The name of the file to read.
-    :return: The instance of the class with the same name as the file.
+    :return: The instance of the class.
     """
     name, ext = os.path.splitext(filename)
     if ext == ".py":
-        class_name = snake_to_camel(os.path.basename(name))
-        klass = load_class_from_file_path(filename, class_name)
-        instance = klass()
-        return instance
+        try:
+            with open(filename, "r", encoding="utf-8") as file:
+                tree = ast.parse(file.read(), filename=filename)
+        except Exception as e:
+            raise ValueError(f"Error parsing the Python file: {filename}: {e}")
+        cls = [node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
+        if len(cls) == 0:
+            raise ValueError(f"No Transformation class found in the Python file: {filename}")
+        if len(cls) > 1:
+            raise ValueError(f"Only one Transformation class is allowed.")
+        return load_class_from_file_path(filename, cls[0])()
 
 
 def read_sql(filename) -> str:
