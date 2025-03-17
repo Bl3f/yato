@@ -1,7 +1,8 @@
 import click
+import duckdb
 
 from yato import Yato
-import duckdb
+
 
 @click.group()
 def cli():
@@ -12,7 +13,13 @@ def cli():
 @click.argument("sql")
 @click.option("--db", help="Path to the DuckDB database.", default="yato.duckdb", show_default=True)
 @click.option("--schema", help="The schema to use in the DuckDB database.", default="transform")
-@click.option("--ui", help="Open the local DuckDB UI upon run completion (requires DuckDB >= v1.2.1)", is_flag=True, default=False, show_default=True)
+@click.option(
+    "--ui",
+    help="Open the local DuckDB UI upon run completion (requires DuckDB >= v1.2.1)",
+    is_flag=True,
+    default=False,
+    show_default=True,
+)
 def run(sql, db, schema, ui):
     """
     Run yato against a DuckDB database using the SQL files.
@@ -41,7 +48,10 @@ def run(sql, db, schema, ui):
                     pass
     else:
         if ui:
-            context.console.print("[bold yellow]DuckDB UI requires version >= 1.2.1. Please update DuckDB to use this feature.")
+            context.console.print(
+                "[bold yellow]DuckDB UI requires version >= 1.2.1. Please update DuckDB to use this feature."
+            )
+
 
 if __name__ == "__main__":
     cli()
