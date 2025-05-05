@@ -211,4 +211,4 @@ class Yato:
         self.run_pre_queries(context)
         self.run_objects(execution_order, dependencies, context)
         generate_mermaid_diagram(self.sql_folder, dependencies)
-        return con
+        return con, context
