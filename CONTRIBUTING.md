@@ -6,26 +6,22 @@ Start by cloning the repository:
 
 ```sh
 git clone https://github.com/Bl3f/yato.git
+cd yato
 ```
 
-Next, you'll need a Python environment:
+Install [uv](https://docs.astral.sh/uv/) and set up the environment:
 
 ```sh
-pyenv install -v 3.12
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv sync
 ```
 
-You'll also need [Poetry](https://python-poetry.org/):
-
-```sh
-curl -sSL https://install.python-poetry.org | python3 -
-poetry install
-poetry shell
-```
+uv will automatically install the required Python version (3.9+) if needed.
 
 ## Testing
 
 You can run tests once the environment is set up:
 
 ```sh
-pytest
+uv run pytest
 ```
