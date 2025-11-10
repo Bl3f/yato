@@ -5,3 +5,6 @@ dist/
 .DS_Store
 
 *.duckdb
+
+# Ignore mermaid diagrams generated during tests
+tests/**/*.mmd
