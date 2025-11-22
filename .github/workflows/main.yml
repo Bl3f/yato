@@ -9,23 +9,20 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: 3.10.x
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.8.3
-          virtualenvs-create: false
+          enable-cache: true
+      - name: Set up Python
+        run: uv python install
       - name: Install dependencies
-        run: poetry install
+        run: uv sync
       - name: Run black checking mode
-        run: black . --check
+        run: uv run black . --check
       - name: Run isort checking mode
-        run: isort . -c -v
+        run: uv run isort . -c -v
       - name: Run tests
-        run: pytest
+        run: uv run pytest
   build:
     name: Build yato distribution
     runs-on: ubuntu-latest
@@ -34,19 +31,16 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: 3.10.x
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.8.3
-          virtualenvs-create: false
+          enable-cache: true
+      - name: Set up Python
+        run: uv python install
       - name: Install dependencies
-        run: poetry install
+        run: uv sync
       - name: Build package
-        run: poetry build
+        run: uv build
       - name: Store the distribution packages
         uses: actions/upload-artifact@v4
         with:
