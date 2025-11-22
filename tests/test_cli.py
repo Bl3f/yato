@@ -12,7 +12,7 @@ def yato_cli(command_string):
     """Helper function to run the CLI with a command string."""
     command_list = shlex.split(command_string)
     result = runner.invoke(run, command_list)
-    return result.stdout.rstrip()
+    return result.output.rstrip()
 
 
 @pytest.mark.parametrize(
